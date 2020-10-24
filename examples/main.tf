@@ -106,3 +106,8 @@ resource "netbox_virtualization_vm" "vm_test" {
     slug = "tag1"
   }
 }
+
+resource "netbox_virtualization_interface" "interface_test" {
+  name = "default"
+  virtualmachine_id = netbox_virtualization_vm.vm_test.id
+}
