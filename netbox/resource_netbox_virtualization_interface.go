@@ -35,7 +35,6 @@ func resourceNetboxVirtualizationInterface() *schema.Resource {
 			"mac_address": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "",
 			},
 			"mode": {
 				Type:     schema.TypeString,
@@ -52,6 +51,13 @@ func resourceNetboxVirtualizationInterface() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 64),
+			},
+			"tagged_vlans": {
+				Type: schema.TypeSet,
+				Elem: &schema.Schema{
+					Type: schema.TypeInt,
+				},
+				Optional: true,
 			},
 			"tag": {
 				Type:     schema.TypeSet,
@@ -87,33 +93,35 @@ func resourceNetboxVirtualizationInterfaceCreate(d *schema.ResourceData,
 
 	description := d.Get("description").(string)
 	enabled := d.Get("enabled").(bool)
-	mac_address := d.Get("mac_address").(string)
+	macAddress := d.Get("mac_address").(string)
 	mode := d.Get("mode").(string)
 	mtu := int64(d.Get("mtu").(int))
 	name := d.Get("name").(string)
+	taggedVlans := d.Get("tagged_vlans").(*schema.Set).List()
 	tags := d.Get("tag").(*schema.Set).List()
-	untagged_vlan := int64(d.Get("untagged_vlan").(int))
-	virtualmachine_id := int64(d.Get("virtualmachine_id").(int))
+	untaggedVlan := int64(d.Get("untagged_vlan").(int))
+	virtualmachineID := int64(d.Get("virtualmachine_id").(int))
 
 	newResource := &models.WritableVMInterface{
-		Description: description,
-		Enabled:     enabled,
-		MacAddress:  &mac_address,
-		Mode:        mode,
-		Name:        &name,
-		Tags:        convertTagsToNestedTags(tags),
+		Description:    description,
+		Enabled:        enabled,
+		Mode:           mode,
+		Name:           &name,
+		TaggedVlans:    expandToInt64Slice(taggedVlans),
+		Tags:           convertTagsToNestedTags(tags),
+		VirtualMachine: &virtualmachineID,
+	}
+
+	if macAddress != "" {
+		newResource.MacAddress = &macAddress
 	}
 
 	if mtu != 0 {
 		newResource.Mtu = &mtu
 	}
 
-	if untagged_vlan != 0 {
-		newResource.UntaggedVlan = &untagged_vlan
-	}
-
-	if virtualmachine_id != 0 {
-		newResource.VirtualMachine = &virtualmachine_id
+	if untaggedVlan != 0 {
+		newResource.UntaggedVlan = &untaggedVlan
 	}
 
 	resource := virtualization.NewVirtualizationInterfacesCreateParams().WithData(newResource)
