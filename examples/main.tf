@@ -80,6 +80,8 @@ resource "netbox_ipam_ip_addresses" "ip_test" {
   address = "192.168.56.1/24"
   status = "active"
   tenant_id = netbox_tenancy_tenant.tenant_test.id
+  object_id = netbox_virtualization_interface.interface_test.id
+#  object_type = netbox_virtualization_interface.interface_test.type
 
   tag {
     name = "tag1"
